@@ -337,8 +337,8 @@ void fix_model_by_win10_sdk_gui(ModelObject &model_object, int volume_idx)
 
 	// Open a progress dialog.
 	wxProgressDialog progress_dialog(
-		_(L("Model fixing")),
-		_(L("Exporting model...")),
+		_L("Model fixing"),
+		_L("Exporting model") + "...",
 		100, nullptr, wxPD_AUTO_HIDE | wxPD_APP_MODAL | wxPD_CAN_ABORT);
 	// Executing the calculation in a background thread, so that the COM context could be created with its own threading model.
 	// (It seems like wxWidgets initialize the COM contex as single threaded and we need a multi-threaded context).
@@ -363,7 +363,7 @@ void fix_model_by_win10_sdk_gui(ModelObject &model_object, int volume_idx)
 				ModelObject *model_object = model.add_object();
 				model_object->add_volume(*volumes[ivolume]);
 				model_object->add_instance();
-				if (! Slic3r::store_3mf(path_src.string().c_str(), &model, nullptr)) {
+				if (!Slic3r::store_3mf(path_src.string().c_str(), &model, nullptr, false)) {
 					boost::filesystem::remove(path_src);
 					throw std::runtime_error(L("Export of a temporary 3mf file failed"));
 				}

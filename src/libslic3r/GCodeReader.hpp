@@ -58,6 +58,7 @@ public:
         bool  has_z() const { return this->has(Z); }
         bool  has_e() const { return this->has(E); }
         bool  has_f() const { return this->has(F); }
+        bool  has_unknown_axis() const { return this->has(UNKNOWN_AXIS); }
         float x() const { return m_axis[X]; }
         float y() const { return m_axis[Y]; }
         float z() const { return m_axis[Z]; }
@@ -119,6 +120,7 @@ public:
     float  f() const { return m_position[F]; }
 
     char   extrusion_axis() const { return m_extrusion_axis; }
+    void   set_extrusion_axis(char axis) { m_extrusion_axis = axis; }
 
 private:
     const char* parse_line_internal(const char *ptr, GCodeLine &gline, std::pair<const char*, const char*> &command);

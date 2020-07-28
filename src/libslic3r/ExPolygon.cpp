@@ -404,7 +404,7 @@ void ExPolygon::triangulate_pp(Polygons* polygons) const
         {
             TPPLPoly p;
             p.Init(int(ex->contour.points.size()));
-            //printf(PRINTF_ZU "\n0\n", ex->contour.points.size());
+            //printf("%zu\n0\n", ex->contour.points.size());
             for (const Point &point : ex->contour.points) {
                 size_t i = &point - &ex->contour.points.front();
                 p[i].x = point(0);
@@ -419,7 +419,7 @@ void ExPolygon::triangulate_pp(Polygons* polygons) const
         for (Polygons::const_iterator hole = ex->holes.begin(); hole != ex->holes.end(); ++hole) {
             TPPLPoly p;
             p.Init(hole->points.size());
-            //printf(PRINTF_ZU "\n1\n", hole->points.size());
+            //printf("%zu\n1\n", hole->points.size());
             for (const Point &point : hole->points) {
                 size_t i = &point - &hole->points.front();
                 p[i].x = point(0);
@@ -655,6 +655,25 @@ extern std::vector<BoundingBox> get_extents_vector(const ExPolygons &polygons)
 bool remove_sticks(ExPolygon &poly)
 {
     return remove_sticks(poly.contour) || remove_sticks(poly.holes);
+}
+
+void keep_largest_contour_only(ExPolygons &polygons)
+{
+	if (polygons.size() > 1) {
+	    double     max_area = 0.;
+	    ExPolygon* max_area_polygon = nullptr;
+	    for (ExPolygon& p : polygons) {
+	        double a = p.contour.area();
+	        if (a > max_area) {
+	            max_area         = a;
+	            max_area_polygon = &p;
+	        }
+	    }
+	    assert(max_area_polygon != nullptr);
+	    ExPolygon p(std::move(*max_area_polygon));
+	    polygons.clear();
+	    polygons.emplace_back(std::move(p));
+	}
 }
 
 } // namespace Slic3r

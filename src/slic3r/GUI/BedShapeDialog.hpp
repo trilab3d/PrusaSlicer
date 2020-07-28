@@ -3,7 +3,7 @@
 // The bed shape dialog.
 // The dialog opens from Print Settins tab->Bed Shape : Set...
 
-#include "OptionsGroup.hpp"
+#include "GUI_Utils.hpp"
 #include "2DBed.hpp"
 #include "I18N.hpp"
 
@@ -12,6 +12,8 @@
 
 namespace Slic3r {
 namespace GUI {
+
+class ConfigOptionsGroup;
 
 struct BedShape {
 	static const size_t TRectangular = 0;

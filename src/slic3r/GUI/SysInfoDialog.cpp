@@ -3,8 +3,11 @@
 #include "3DScene.hpp"
 #include "GUI.hpp"
 #include "../Utils/UndoRedo.hpp"
+#include "Plater.hpp"
 
 #include <string>
+
+#include <Eigen/Core>
 
 #include <wx/clipbrd.h>
 #include <wx/platinfo.h>
@@ -145,11 +148,11 @@ SysInfoDialog::SysInfoDialog()
             "</font>"
             "</body>"
             "</html>", bgr_clr_str, text_clr_str, text_clr_str,
-            get_mem_info(true) + "<br>" + _3DScene::get_gl_info(true, true));
+            get_mem_info(true) + "<br>" + wxGetApp().get_gl_info(true, true) + "<br>Eigen vectorization supported: " + Eigen::SimdInstructionSetsInUse());
         m_opengl_info_html->SetPage(text);
         main_sizer->Add(m_opengl_info_html, 1, wxEXPAND | wxBOTTOM, 15);
     }
-    
+
     wxStdDialogButtonSizer* buttons = this->CreateStdDialogButtonSizer(wxOK);
     m_btn_copy_to_clipboard = new wxButton(this, wxID_ANY, _(L("Copy to Clipboard")), wxDefaultPosition, wxDefaultSize);
 
@@ -198,7 +201,7 @@ void SysInfoDialog::on_dpi_changed(const wxRect &suggested_rect)
 void SysInfoDialog::onCopyToClipboard(wxEvent &)
 {
     wxTheClipboard->Open();
-    const auto text = get_main_info(false)+"\n"+_3DScene::get_gl_info(false, true);
+    const auto text = get_main_info(false) + "\n" + wxGetApp().get_gl_info(false, true);
     wxTheClipboard->SetData(new wxTextDataObject(text));
     wxTheClipboard->Close();
 }

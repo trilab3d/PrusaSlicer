@@ -313,6 +313,7 @@ std::string ExtrusionEntity::role_to_string(ExtrusionRole role)
         case erInternalInfill               : return L("Internal infill");
         case erSolidInfill                  : return L("Solid infill");
         case erTopSolidInfill               : return L("Top solid infill");
+        case erIroning                      : return L("Ironing");
         case erBridgeInfill                 : return L("Bridge infill");
         case erGapFill                      : return L("Gap fill");
         case erSkirt                        : return L("Skirt");

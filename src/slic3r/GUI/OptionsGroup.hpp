@@ -11,7 +11,7 @@
 #include "libslic3r/PrintConfig.hpp"
 
 #include "Field.hpp"
-#include "GUI_App.hpp"
+#include "I18N.hpp"
 
 // Translate the ifdef 
 #ifdef __WXOSX__
@@ -59,7 +59,7 @@ public:
 		m_extra_widgets.push_back(widget);
     }
 	Line(wxString label, wxString tooltip) :
-		label(label), label_tooltip(tooltip) {}
+		label(_(label)), label_tooltip(_(tooltip)) {}
 
     const std::vector<widget_t>&	get_extra_widgets() const {return m_extra_widgets;}
     const std::vector<Option>&		get_options() const { return m_options; }
@@ -78,7 +78,7 @@ class OptionsGroup {
 	wxStaticBox*	stb;
 public:
     const bool		staticbox {true};
-    const wxString	title {wxString("")};
+    const wxString	title;
     size_t			label_width = 20 ;// {200};
     wxSizer*		sizer {nullptr};
     column_t		extra_column {nullptr};
@@ -97,6 +97,7 @@ public:
     wxFont			sidetext_font {wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT) };
     wxFont			label_font {wxSystemSettings::GetFont(wxSYS_DEFAULT_GUI_FONT) };
 	int				sidetext_width{ -1 };
+	int				sublabel_width{ -1 };
 
     /// Returns a copy of the pointer of the parent wxWindow.
     /// Accessor function is because users are not allowed to change the parent
@@ -169,31 +170,7 @@ public:
     }
 
 	OptionsGroup(	wxWindow* _parent, const wxString& title, bool is_tab_opt = false, 
-					column_t extra_clmn = nullptr) :
-					m_parent(_parent), title(title), 
-                    m_show_modified_btns(is_tab_opt),
-					staticbox(title!=""), extra_column(extra_clmn) {
-        if (staticbox) {
-            stb = new wxStaticBox(_parent, wxID_ANY, title);
-            if (!wxOSX) stb->SetBackgroundStyle(wxBG_STYLE_PAINT);
-            stb->SetFont(wxGetApp().bold_font());
-        } else
-        	stb = nullptr;
-        sizer = (staticbox ? new wxStaticBoxSizer(stb, wxVERTICAL) : new wxBoxSizer(wxVERTICAL));
-        auto num_columns = 1U;
-        if (label_width != 0) num_columns++;
-        if (extra_column != nullptr) num_columns++;
-        m_grid_sizer = new wxFlexGridSizer(0, num_columns, 1,0);
-        static_cast<wxFlexGridSizer*>(m_grid_sizer)->SetFlexibleDirection(wxBOTH/*wxHORIZONTAL*/);
-        static_cast<wxFlexGridSizer*>(m_grid_sizer)->AddGrowableCol(label_width == 0 ? 0 : !extra_column ? 1 : 2 );
-#if 0//#ifdef __WXGTK__
-        m_panel = new wxPanel( _parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL );
-        sizer->Fit(m_panel);
-        sizer->Add(m_panel, 0, wxEXPAND | wxALL, wxOSX||!staticbox ? 0: 5);
-#else
-        sizer->Add(m_grid_sizer, 0, wxEXPAND | wxALL, wxOSX||!staticbox ? 0: 5);
-#endif /* __WXGTK__ */
-    }
+                    column_t extra_clmn = nullptr);
 
     wxGridSizer*        get_grid_sizer() { return m_grid_sizer; }
 
@@ -246,6 +223,8 @@ public:
     bool					m_full_labels {0};
 	t_opt_map				m_opt_map;
 
+    std::string             config_category;
+
     void        set_config(DynamicPrintConfig* config) { m_config = config; }
 	Option		get_option(const std::string& opt_key, int opt_index = -1);
 	Line		create_single_option_line(const std::string& title, int idx = -1) /*const*/{
@@ -275,6 +254,7 @@ public:
     void        Show(const bool show);
     bool        update_visibility(ConfigOptionMode mode);
     void        msw_rescale();
+    void        sys_color_changed();
 	boost::any	config_value(const std::string& opt_key, int opt_index, bool deserialize);
 	// return option value from config 
 	boost::any	get_config_value(const DynamicPrintConfig& config, const std::string& opt_key, int opt_index = -1);
