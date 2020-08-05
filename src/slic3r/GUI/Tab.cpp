@@ -425,6 +425,8 @@ void Tab::update_labels_colour()
             if (label) {
                 label->SetForegroundColour(*color);
                 label->Refresh(true);
+            }
+        }
 		OptKey_Label_Map::iterator it = m_opt_parent_labels.find(opt.first);
 		if (it != m_opt_parent_labels.end()) {
 			wxStaticText* label = it->second;
@@ -3346,7 +3348,7 @@ void Tab::save_preset(std::string name /*= ""*/, bool detach)
 
 void Tab::update_after_preset_save(bool update_extr_count) {
 	// Mark the print & filament enabled if they are compatible with the currently selected preset.
-	m_preset_bundle->update_compatible(false);
+//	m_preset_bundle->update_compatible(false);
 	// Add the new item into the UI component, remove dirty flags and activate the saved item.
 	update_tab_ui();
 	// Update the selection boxes at the platter.
@@ -3828,7 +3830,7 @@ void SavePresetWindow::build_entry(const wxString& title, const std::string& def
 	m_sizer->Insert(cur_entry_insert_offset++, sizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
 	m_sizer->Insert(cur_entry_insert_offset++, status_text, 0, wxALIGN_CENTER_HORIZONTAL |wxALL, 10);
 
-	this->entries.push_back(new Entry(combo, std::string(title), presets, status_icon, status_text, tab, m_max_width + 10));
+	this->entries.push_back(new Entry(combo, into_u8(title), presets, status_icon, status_text, tab, m_max_width + 10));
 
 	combo->Bind(wxEVT_TEXT, [this, entry = entries.back()](wxCommandEvent& e){ On_combo_text(entry); });
 
@@ -3838,8 +3840,8 @@ void SavePresetWindow::build_entry(const wxString& title, const std::string& def
 void SavePresetWindow::On_combo_text(Entry* entry) {
 	std::string chosen_name = normalize_utf8_nfc(entry->combo->GetValue().ToUTF8());
 
-	std::string errMsg;
-	std::string warningMsg;
+	wxString errMsg;
+	wxString warningMsg;
 
 	entry->mustDeleteOld = false;
 
@@ -3889,7 +3891,7 @@ void SavePresetWindow::On_combo_text(Entry* entry) {
 		}
 	}
 
-	std::string finalMsg;
+	wxString finalMsg;
 	wxBitmap icon;
 	wxFont font;
 
@@ -3941,7 +3943,7 @@ void SavePresetWindow::update_btn_accept() {
 
 void SavePresetWindow::accept()
 {
-	std::string msg_overwrite;
+	wxString msg_overwrite;
 
 	for(Entry* cur_entry : entries){
 		if (!cur_entry->hasValidChosenName) {
@@ -4047,10 +4049,12 @@ void TabSLAMaterial::build()
 
     create_line_with_widget(optgroup.get(), "compatible_printers", [this](wxWindow* parent) {
         return compatible_widget_create(parent, m_compatible_printers);
-    };
+    });
+	/*
 	wxStaticText* label;
 	optgroup->append_line(line, &label);
 	m_opt_parent_labels["compatible_printers"] = label;
+	*/
 
     option = optgroup->get_option("compatible_printers_condition");
     option.opt.full_width = true;
@@ -4058,9 +4062,11 @@ void TabSLAMaterial::build()
 
     create_line_with_widget(optgroup.get(), "compatible_prints", [this](wxWindow* parent) {
         return compatible_widget_create(parent, m_compatible_prints);
-    };
+    });
+	/*
 	optgroup->append_line(line, &label);
 	m_opt_parent_labels["compatible_prints"] = label;
+	*/
 
     option = optgroup->get_option("compatible_prints_condition");
     option.opt.full_width = true;
@@ -4176,10 +4182,12 @@ void TabSLAPrint::build()
 
     create_line_with_widget(optgroup.get(), "compatible_printers", [this](wxWindow* parent) {
         return compatible_widget_create(parent, m_compatible_printers);
-    };
+    });
+	/*
 	wxStaticText* label;
 	optgroup->append_line(line, &label);
 	m_opt_parent_labels["compatible_printers"] = label;
+	*/
 
     option = optgroup->get_option("compatible_printers_condition");
     option.opt.full_width = true;

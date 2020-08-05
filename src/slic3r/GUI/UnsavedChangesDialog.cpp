@@ -433,7 +433,7 @@ namespace Slic3r {
 			if (!itemCount) {
 				wxBoxSizer* sizer = new wxBoxSizer(wxHORIZONTAL);
 
-				wxStaticBitmap* icon = new wxStaticBitmap(m_scroller, wxID_ANY, create_scaled_bitmap(nullptr, "tick_mark", 32));
+				wxStaticBitmap* icon = new wxStaticBitmap(m_scroller, wxID_ANY, create_scaled_bitmap("tick_mark", nullptr, 32));
 				wxStaticText* msg = new wxStaticText(m_scroller, wxID_ANY, _(L("Nothing to save")));
 				wxFont msg_font = GUI::wxGetApp().normal_font();
 				msg_font.SetPointSize(12);
@@ -594,10 +594,10 @@ namespace Slic3r {
 					tab->get_page_and_optgroup(cur_opt.key, cur_opt.extruder_index);
 
 				if (ptrs.first != nullptr) {
-					cur_opt.page_name = ptrs.first->title();
+					cur_opt.page_name = into_u8(ptrs.first->title());
 
 					if (ptrs.second != nullptr) {
-						cur_opt.optgroup_name = ptrs.second->title;
+						cur_opt.optgroup_name = into_u8(ptrs.second->title);
 					}
 				}
 
@@ -620,9 +620,11 @@ namespace Slic3r {
 			const int icon_width = lround(6.4 * em);
 			const int icon_height = lround(1.6 * em);
 
+			BitmapCache bmp_cache;
+
 			unsigned char rgb[3];
-			if (!Slic3r::PresetBundle::parse_color(color, rgb)) {
-				wxBitmap bmp = BitmapCache::mksolid(icon_width, icon_height, 0, 0, 0, wxALPHA_TRANSPARENT);
+			if (!/*Slic3r::PresetBundle*/BitmapCache::parse_color(color, rgb)) {
+				wxBitmap bmp = bmp_cache.mksolid(icon_width, icon_height, 0, 0, 0, wxALPHA_TRANSPARENT);
 
 				wxMemoryDC dc(bmp);
 				if (!dc.IsOk()) 
@@ -639,7 +641,7 @@ namespace Slic3r {
 				return bmp;
 			}
 			else {
-				wxBitmap bmp = BitmapCache::mksolid(icon_width, icon_height, rgb);
+				wxBitmap bmp = bmp_cache.mksolid(icon_width, icon_height, rgb);
 				return bmp;
 			}
 		}
@@ -809,7 +811,7 @@ namespace Slic3r {
 			wxWindow* win_old_opt;
 			wxWindow* win_new_opt;
 
-			std::string tooltip = getTooltipText(*opt.val.def, opt.val.extruder_index);
+			wxString tooltip = getTooltipText(*opt.val.def, opt.val.extruder_index);
 
 			if (val.def->gui_type == "color") {
 				win_old_opt = buildColorWindow(parent, old_val);
@@ -834,10 +836,10 @@ namespace Slic3r {
 					const ConfigOptionDef* def = opt.val.def;
 					for (size_t i = 0; i < def->enum_values.size() && i < def->enum_labels.size(); i++) {
 						if (old_val == def->enum_values[i]) {
-							old_val = _(def->enum_labels[i]);
+							old_val = _utf8(def->enum_labels[i]);
 						}
 						if (new_val == def->enum_values[i]) {
-							new_val = _(def->enum_labels[i]);
+							new_val = _utf8(def->enum_labels[i]);
 						}
 					}
 				}

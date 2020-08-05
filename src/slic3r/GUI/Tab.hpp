@@ -502,9 +502,9 @@ class SavePresetWindow :public wxDialog
 public:
 	SavePresetWindow(wxWindow* parent) : wxDialog(parent, wxID_ANY, _(L("Save preset"))) 
 	{
-		m_icon_cross = create_scaled_bitmap(nullptr, "cross_red");
-		m_icon_warning = create_scaled_bitmap(nullptr, "warning");
-		m_icon_tick = create_scaled_bitmap(nullptr, "tick_mark");
+		m_icon_cross	= create_scaled_bitmap("cross_red");
+		m_icon_warning	= create_scaled_bitmap("warning");
+		m_icon_tick		= create_scaled_bitmap("tick_mark");
 		
 		this->build_base_layout();
 	}
@@ -531,9 +531,9 @@ private:
 		PresetCollection* preset;
 		Tab* tab;
 
-		wxStaticBitmap* status_icon = NULL;
-		wxStaticText* status_text = NULL;
-		std::string str_status_text = "nil";
+		wxStaticBitmap* status_icon { nullptr };
+		wxStaticText* status_text { nullptr };
+		wxString str_status_text = "nil";
 
 		bool mustDeleteOld = false;
 		bool hasValidChosenName = false;
@@ -551,7 +551,7 @@ private:
 			max_width(_max_width)
 		{}
 
-		void setStatus(const wxBitmap& icon, std::string text, wxFont font) {
+		void setStatus(const wxBitmap& icon, wxString text, wxFont font) {
 			this->status_icon->SetBitmap(icon);
 			this->status_text->SetLabel(text);
 			this->status_text->SetFont(font);
