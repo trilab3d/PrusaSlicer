@@ -3484,6 +3484,7 @@ void Plater::priv::on_slicing_update(SlicingStatusEvent &evt)
 void Plater::priv::on_slicing_completed(wxCommandEvent & evt)
 {
 	notification_manager->push_slicing_complete_notification(*q->get_current_canvas3D(), evt.GetInt(), is_sidebar_collapsed());
+    notification_manager->push_progress_bar_notification("progress bar", *q->get_current_canvas3D());
 
     switch (this->printer_technology) {
     case ptFFF:

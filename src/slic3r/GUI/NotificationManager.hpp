@@ -186,7 +186,7 @@ private:
 
 	protected:
 		// Call after every size change
-		void         init();
+		virtual void         init();
 		// Calculetes correct size but not se it in imgui!
 		virtual void set_next_window_size(ImGuiWrapper& imgui);
 		virtual void render_text(ImGuiWrapper& imgui,

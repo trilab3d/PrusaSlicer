@@ -324,7 +324,7 @@ void NotificationManager::PopNotification::render_text(ImGuiWrapper& imgui, cons
 			ImGui::SetCursorPosY(win_size.y / 2 - win_size.y / 6 - m_line_height / 2);
 			imgui.text(m_text1.substr(0, m_endlines[0]).c_str());
 			// line2
-			std::string line = m_text1.substr(m_endlines[0] + 1);
+			std::string line = m_endlines[0] + 1 < m_text1.length() ? m_text1.substr(m_endlines[0] + 1) : std::string();
 			cursor_y = win_size.y / 2 + win_size.y / 6 - m_line_height / 2;
 			ImGui::SetCursorPosX(x_offset);
 			ImGui::SetCursorPosY(cursor_y);
@@ -506,8 +506,6 @@ void NotificationManager::PopNotification::render_left_sign(ImGuiWrapper& imgui)
 }
 void NotificationManager::PopNotification::render_minimize_button(ImGuiWrapper& imgui, const float win_pos_x, const float win_pos_y)
 {
-	ImVec4 orange_color = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-	orange_color.w = 0.8f;
 	ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(.0f, .0f, .0f, .0f));
 	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(.0f, .0f, .0f, .0f));
 	Notifications_Internal::push_style_color(ImGuiCol_ButtonActive, ImGui::GetStyleColorVec4(ImGuiCol_WindowBg), m_fading_out, m_current_fade_opacity);
@@ -630,6 +628,39 @@ void NotificationManager::SlicingCompleteLargeNotification::set_large(bool l)
 	m_counting_down = !l;
 	m_hypertext = l ? _u8L("Export G-Code.") : std::string();
 	m_hidden = !l;
+}
+//------ProgressBar----------------
+void NotificationManager::ProgressBarNotification::init()
+{
+	PopNotification::init();
+	m_lines_count++;
+	m_endlines.push_back(m_endlines.back());
+}
+void NotificationManager::ProgressBarNotification::render_text(ImGuiWrapper& imgui, const float win_size_x, const float win_size_y, const float win_pos_x, const float win_pos_y)
+{
+	PopNotification::render_text(imgui, win_size_x, win_size_y, win_pos_x, win_pos_y);
+	render_bar(imgui, win_size_x, win_size_y, win_pos_x, win_pos_y);
+}
+void NotificationManager::ProgressBarNotification::render_bar(ImGuiWrapper& imgui, const float win_size_x, const float win_size_y, const float win_pos_x, const float win_pos_y)
+{
+	float bar_y = win_size_y / 2 - win_size_y / 6 + m_line_height;
+	ImVec4 orange_color = ImVec4(.99f, .313f, .0f, 1.0f);
+	float  invisible_length = 0;//((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
+	//invisible_length -= win_size_x / ((float)m_data.duration * 60.f) * (60 - m_countdown_frame);
+	ImVec2 lineEnd = ImVec2(win_pos_x - invisible_length - m_window_width_offset, win_pos_y + win_size_y/2 + m_line_height / 2);
+	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x + m_left_indentation, win_pos_y + win_size_y/2 + m_line_height / 2);
+	ImGui::GetWindowDrawList()->AddLine(lineStart, lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
+	/*
+	//countdown line
+	ImVec4 orange_color = ImGui::GetStyleColorVec4(ImGuiCol_Button);
+	float  invisible_length = ((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
+	invisible_length -= win_size_x / ((float)m_data.duration * 60.f) * (60 - m_countdown_frame);
+	ImVec2 lineEnd = ImVec2(win_pos_x - invisible_length, win_pos_y + win_size_y - 5);
+	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x, win_pos_y + win_size_y - 5);
+	ImGui::GetWindowDrawList()->AddLine(lineStart, lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (int)(orange_color.picture_width * 255.f * (m_fading_out ? m_current_fade_opacity : 1.f))), 2.f);
+	if (!m_paused)
+		m_countdown_frame++;
+		*/
 }
 //------NotificationManager--------
 NotificationManager::NotificationManager(wxEvtHandler* evt_handler) :
@@ -787,6 +818,16 @@ void NotificationManager::remove_slicing_warnings_of_released_objects(const std:
 				notification->close();
 		}
 }
+void  NotificationManager::push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas)
+{
+	NotificationData data{ NotificationType::ProgressBar, NotificationLevel::ProgressBarNotification, 0, text };
+	NotificationManager::ProgressBarNotification* notification = new NotificationManager::ProgressBarNotification(data, m_next_id++, m_evt_handler);
+	if (!push_notification_data(notification, canvas, 0)) {
+		delete notification;
+	}
+}
+
+
 bool NotificationManager::push_notification_data(const NotificationData &notification_data,  GLCanvas3D& canvas, int timestamp)
 {
 	return push_notification_data(std::make_unique<PopNotification>(notification_data, m_id_provider, m_evt_handler), canvas, timestamp);
