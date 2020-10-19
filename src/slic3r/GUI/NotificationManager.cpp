@@ -653,28 +653,20 @@ void NotificationManager::ProgressBarNotification::render_bar(ImGuiWrapper& imgu
 	// progress bar
 	float bar_y = win_size_y / 2 - win_size_y / 6 + m_line_height;
 	ImVec4 orange_color = ImVec4(.99f, .313f, .0f, 1.0f);
-	//float  invisible_length = 0;//((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
-	//invisible_length -= win_size_x / ((float)m_data.duration * 60.f) * (60 - m_countdown_frame);
 	ImVec2 lineEnd = ImVec2(win_pos_x - m_window_width_offset, win_pos_y + win_size_y / 2 + m_line_height / 2);
 	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x + m_left_indentation, win_pos_y + win_size_y / 2 + m_line_height / 2);
 	float full_length = lineEnd.x - lineStart.x;
+	/* milestones
 	float max_progrees = (full_length / m_milestones) * m_milestones_done + (full_length / m_milestones);
 	float min_progrees = m_milestones_done == 0 ? 0.0f : (full_length / m_milestones) * (m_milestones_done - 1) + (full_length / m_milestones);
 	float  invisible_length = full_length - (max_progrees / 2.0f);
+	*/
+	//percents
+	float  invisible_length = full_length * (1.0 - m_percentage);
 	ImGui::GetWindowDrawList()->AddLine(lineStart, ImVec2(lineEnd.x - invisible_length, lineEnd.y), IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
 	// finish mark
 	ImGui::GetWindowDrawList()->AddLine(ImVec2(lineEnd.x - 2, lineEnd.y), lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
-	/*
-	//countdown line
-	ImVec4 orange_color = ImGui::GetStyleColorVec4(ImGuiCol_Button);
-	float  invisible_length = ((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
-	invisible_length -= win_size_x / ((float)m_data.duration * 60.f) * (60 - m_countdown_frame);
-	ImVec2 lineEnd = ImVec2(win_pos_x - invisible_length, win_pos_y + win_size_y - 5);
-	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x, win_pos_y + win_size_y - 5);
-	ImGui::GetWindowDrawList()->AddLine(lineStart, lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (int)(orange_color.picture_width * 255.f * (m_fading_out ? m_current_fade_opacity : 1.f))), 2.f);
-	if (!m_paused)
-		m_countdown_frame++;
-		*/
+
 }
 //------NotificationManager--------
 NotificationManager::NotificationManager(wxEvtHandler* evt_handler) :
@@ -832,12 +824,25 @@ void NotificationManager::remove_slicing_warnings_of_released_objects(const std:
 				notification->close();
 		}
 }
-void  NotificationManager::push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas)
+void  NotificationManager::push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas, float percentage)
 {
 	NotificationData data{ NotificationType::ProgressBar, NotificationLevel::ProgressBarNotification, 0, text };
-	push_notification_data(std::make_unique<NotificationManager::ProgressBarNotification>(data, m_id_provider, m_evt_handler), canvas, 0);
+	push_notification_data(std::make_unique<NotificationManager::ProgressBarNotification>(data, m_id_provider, m_evt_handler, percentage), canvas, 0);
 }
-
+void NotificationManager::set_progress_bar_percentage(const std::string& text, float percentage, GLCanvas3D& canvas)
+{
+	bool found = false;
+	for (std::unique_ptr<PopNotification>& notification : m_pop_notifications) {
+		if (notification->get_type() == NotificationType::ProgressBar && notification->compare_text(text)) {
+			dynamic_cast<ProgressBarNotification*>(notification.get())->set_percentage(percentage);
+			canvas.request_extra_frame();
+			found = true;
+		}
+	}
+	if (!found) { 
+		push_progress_bar_notification(text, canvas, percentage);
+	}
+}
 
 bool NotificationManager::push_notification_data(const NotificationData &notification_data,  GLCanvas3D& canvas, int timestamp)
 {

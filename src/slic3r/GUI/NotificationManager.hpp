@@ -120,7 +120,8 @@ public:
 	// the "slicing info" normally shown at the side bar.
 	void set_slicing_complete_large(bool large);
 	// notification with progress bar
-	void push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas);
+	void push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas, float percentage = 0.0f);
+	void set_progress_bar_percentage(const std::string& text, float percentage, GLCanvas3D& canvas);
 	// renders notifications in queue and deletes expired ones
 	void render_notifications(GLCanvas3D& canvas, float overlay_width);
 	// finds and closes all notifications of given type
@@ -293,10 +294,10 @@ private:
 	class ProgressBarNotification : public PopNotification
 	{
 	public:
-		ProgressBarNotification(const NotificationData& n, NotificationIDProvider& id_provider, wxEvtHandler* evt_handler) : PopNotification(n, id_provider, evt_handler) {}
-		void set_milestones_count(size_t milestones_count) { m_milestones = milestones_count + 1; }
-		void milestone_complete() { m_milestones_done++; }
-		bool m_progress_complete { false };
+		ProgressBarNotification(const NotificationData& n, NotificationIDProvider& id_provider, wxEvtHandler* evt_handler,float percentage) : PopNotification(n, id_provider, evt_handler) { set_percentage(percentage);  }
+		//void set_milestones_count(size_t milestones_count) { m_milestones = milestones_count + 1; }
+		//void milestone_complete() { m_milestones_done++; }
+		void set_percentage (float percent)	{ m_percentage = percent; if(percent >= 1.0f) m_progress_complete = true; else m_progress_complete = false; }
 	protected:
 		virtual void init();
 		virtual void render_text(ImGuiWrapper& imgui,
@@ -305,8 +306,10 @@ private:
 		void         render_bar(ImGuiWrapper& imgui,
 			                    const float win_size_x, const float win_size_y,
 			                    const float win_pos_x, const float win_pos_y);
-		size_t m_milestones { 1 };
-		size_t m_milestones_done { 0 };
+		//size_t m_milestones { 1 };
+		//size_t m_milestones_done { 0 };
+		bool m_progress_complete { false };
+		float m_percentage;
 	};
 
 	//pushes notification into the queue of notifications that are rendered
