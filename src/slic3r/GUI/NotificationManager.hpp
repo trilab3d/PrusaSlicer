@@ -56,7 +56,9 @@ enum class NotificationType
 	// Object partially outside the print volume. Cannot slice.
 	PlaterError,
 	// Object fully outside the print volume, or extrusion outside the print volume. Slicing is not disabled.
-	PlaterWarning
+	PlaterWarning,
+	// Progress of ?
+	ProgressBar
 };
 
 class NotificationManager
@@ -70,6 +72,8 @@ public:
 		RegularNotification = 1,
 		// Information notification without a fade-out or with a longer fade-out.
 		ImportantNotification,
+		// Information on progressing action, no fade-out. Not closeable until progressed to finish?
+		ProgressBarNotification,
 		// Warning, no fade-out.
 		WarningNotification,
 		// Error, no fade-out.
@@ -115,6 +119,8 @@ public:
 	// Called when the side bar changes its visibility, as the "slicing complete" notification supplements
 	// the "slicing info" normally shown at the side bar.
 	void set_slicing_complete_large(bool large);
+	// notification with progress bar
+	void push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas);
 	// renders notifications in queue and deletes expired ones
 	void render_notifications(GLCanvas3D& canvas, float overlay_width);
 	// finds and closes all notifications of given type
@@ -282,6 +288,25 @@ private:
 		SlicingWarningNotification(const NotificationData& n, NotificationIDProvider& id_provider, wxEvtHandler* evt_handler) : PopNotification(n, id_provider, evt_handler) {}
 		ObjectID 	object_id;
 		int    		warning_step;
+	};
+
+	class ProgressBarNotification : public PopNotification
+	{
+	public:
+		ProgressBarNotification(const NotificationData& n, NotificationIDProvider& id_provider, wxEvtHandler* evt_handler) : PopNotification(n, id_provider, evt_handler) {}
+		void set_milestones_count(size_t milestones_count) { m_milestones = milestones_count + 1; }
+		void milestone_complete() { m_milestones_done++; }
+		bool m_progress_complete { false };
+	protected:
+		virtual void init();
+		virtual void render_text(ImGuiWrapper& imgui,
+			                     const float win_size_x, const float win_size_y,
+			                     const float win_pos_x, const float win_pos_y);
+		void         render_bar(ImGuiWrapper& imgui,
+			                    const float win_size_x, const float win_size_y,
+			                    const float win_pos_x, const float win_pos_y);
+		size_t m_milestones { 1 };
+		size_t m_milestones_done { 0 };
 	};
 
 	//pushes notification into the queue of notifications that are rendered

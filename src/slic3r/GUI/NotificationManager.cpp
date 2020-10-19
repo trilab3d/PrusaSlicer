@@ -581,7 +581,7 @@ bool NotificationManager::PopNotification::compare_text(const std::string& text)
 		return true;
 	return false;
 }
-
+//----------SlicingCompleteLargeNotification-------------
 NotificationManager::SlicingCompleteLargeNotification::SlicingCompleteLargeNotification(const NotificationData& n, NotificationIDProvider& id_provider, wxEvtHandler* evt_handler, bool large) :
 	  NotificationManager::PopNotification(n, id_provider, evt_handler)
 {
@@ -643,13 +643,27 @@ void NotificationManager::ProgressBarNotification::render_text(ImGuiWrapper& img
 }
 void NotificationManager::ProgressBarNotification::render_bar(ImGuiWrapper& imgui, const float win_size_x, const float win_size_y, const float win_pos_x, const float win_pos_y)
 {
+	if (m_progress_complete) {
+		float cursor_y = win_size_y / 2 + win_size_y / 6 - m_line_height / 2;
+		ImGui::SetCursorPosX(m_left_indentation);
+		ImGui::SetCursorPosY(cursor_y);
+		imgui.text("Finished.");
+		return;
+	}
+	// progress bar
 	float bar_y = win_size_y / 2 - win_size_y / 6 + m_line_height;
 	ImVec4 orange_color = ImVec4(.99f, .313f, .0f, 1.0f);
-	float  invisible_length = 0;//((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
+	//float  invisible_length = 0;//((float)(m_data.duration - m_remaining_time) / (float)m_data.duration * win_size_x);
 	//invisible_length -= win_size_x / ((float)m_data.duration * 60.f) * (60 - m_countdown_frame);
-	ImVec2 lineEnd = ImVec2(win_pos_x - invisible_length - m_window_width_offset, win_pos_y + win_size_y/2 + m_line_height / 2);
-	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x + m_left_indentation, win_pos_y + win_size_y/2 + m_line_height / 2);
-	ImGui::GetWindowDrawList()->AddLine(lineStart, lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
+	ImVec2 lineEnd = ImVec2(win_pos_x - m_window_width_offset, win_pos_y + win_size_y / 2 + m_line_height / 2);
+	ImVec2 lineStart = ImVec2(win_pos_x - win_size_x + m_left_indentation, win_pos_y + win_size_y / 2 + m_line_height / 2);
+	float full_length = lineEnd.x - lineStart.x;
+	float max_progrees = (full_length / m_milestones) * m_milestones_done + (full_length / m_milestones);
+	float min_progrees = m_milestones_done == 0 ? 0.0f : (full_length / m_milestones) * (m_milestones_done - 1) + (full_length / m_milestones);
+	float  invisible_length = full_length - (max_progrees / 2.0f);
+	ImGui::GetWindowDrawList()->AddLine(lineStart, ImVec2(lineEnd.x - invisible_length, lineEnd.y), IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
+	// finish mark
+	ImGui::GetWindowDrawList()->AddLine(ImVec2(lineEnd.x - 2, lineEnd.y), lineEnd, IM_COL32((int)(orange_color.x * 255), (int)(orange_color.y * 255), (int)(orange_color.z * 255), (1.0f * 255.f)), m_line_height * 0.7f);
 	/*
 	//countdown line
 	ImVec4 orange_color = ImGui::GetStyleColorVec4(ImGuiCol_Button);
@@ -821,10 +835,7 @@ void NotificationManager::remove_slicing_warnings_of_released_objects(const std:
 void  NotificationManager::push_progress_bar_notification(const std::string& text, GLCanvas3D& canvas)
 {
 	NotificationData data{ NotificationType::ProgressBar, NotificationLevel::ProgressBarNotification, 0, text };
-	NotificationManager::ProgressBarNotification* notification = new NotificationManager::ProgressBarNotification(data, m_next_id++, m_evt_handler);
-	if (!push_notification_data(notification, canvas, 0)) {
-		delete notification;
-	}
+	push_notification_data(std::make_unique<NotificationManager::ProgressBarNotification>(data, m_id_provider, m_evt_handler), canvas, 0);
 }
 
 
